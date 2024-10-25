@@ -127,7 +127,7 @@ print("Uncommon Backup matches")
 root = c['Other Interesting Files']['sections']['Backup files (limited 100)']['lines']
 
 exclusions = [
-  r'/etc/apt/sources.list.curtin.old'
+  r'/etc/apt/sources.list.curtin.old',
   r'/var/lib/systemd/deb-systemd-helper-enabled/dpkg-db-backup.timer.dsh-also',
   r'/var/lib/systemd/deb-systemd-helper-enabled/timers.target.wants/dpkg-db-backup.timer',
   r'/usr/src/linux-headers-5.15.0-88/tools/testing/selftests/net/tcp_fastopen_backup_key.sh',
@@ -145,8 +145,6 @@ exclusions = [
   r'/usr/share/byobu/desktop/byobu.desktop.old',
   r'/usr/libexec/dpkg/dpkg-db-backup',
 ]
-#-rw-r--r-- 1 root root 2403 Feb 17  2023 /etc/apt/sources.list.curtin.old
-#-rw-r--r-- 1 root root 61 Nov  6  2023 /var/lib/systemd/deb-systemd-helper-enabled/dpkg-db-backup.timer.dsh-also
 
 exclusions = [r'(?:-rwxr-xr-x|-rw-r--r--)\s+\d+\s+root\s+root\s+\d+[KMG]?\s+.*\s+' + pattern for pattern in exclusions]
 exclusions = [pattern + r'$' for pattern in exclusions]
@@ -157,6 +155,21 @@ for item in range(len(clean)):
   print(clean[item])
 sep()
 
+# Searching tables inside readable .db/.sql/.sqlite files (limit 100)
+root = c['Other Interesting Files']['sections']['Searching tables inside readable .db/.sql/.sqlite files (limit 100)']['lines']
+print("Uncommon .db .sql .sqlite files")
+
+exclusions = [
+  r'Found /var/lib/PackageKit/transactions.db.*',
+  r'Found /var/lib/command-not-found/commands.db.*',
+  r'-> Extracting tables from /var/lib/PackageKit/transactions.db.*',
+  r'-> Extracting tables from /var/lib/command-not-found/commands.db.*',
+]
+clean = [item['clean_text'] for item in root 
+         if 'clean_text' in item and not any(re.search(exclusion, item['clean_text']) for exclusion in exclusions)]
+for item in range(len(clean)):
+  print(clean[item])
+sep()
 
 # Easy File Misconfigs / AppArmor binary profiles
 print("Easy File Misconfigs")
@@ -272,10 +285,13 @@ sep()
 #TODO These repeat in output. Fix that 
 print('Procs')
 root = c['Processes, Crons, Timers, Services and Sockets']['sections']['Running processes (cleaned)']['lines']
-clean = [item['clean_text'] for item in root 
-         if 'clean_text' in item for exclusion in exclusions]
-for item in range(len(clean)):
-  print(clean[item])
+
+exclusions = []
+
+clean = [item['clean_text'] for item in root if 'clean_text' in item]
+for item in clean:
+  print(item)
+  exclusions.append(item)
 sep()
 
 # Systemd PATH
@@ -420,6 +436,65 @@ sep()
 
 # Checking 'sudo -l', /etc/sudoers, and /etc/sudoers.d
 print("Check sudo -l, /etc/sudoers, and /etc/sudoers.d")
+sep()
+
+# Searching passwords in history files
+print("Passwords in History Files")
+root = c['Other Interesting Files']['sections']['Searching passwords in history files']['lines']
+exclusions = []
+clean = [item['clean_text'] for item in root 
+         if 'clean_text' in item and not any(re.search(exclusion, item['clean_text']) for exclusion in exclusions)]
+for item in range(len(clean)):
+  print(clean[item])
+sep()
+
+# Searching *password* or *credential* files in home (limit 70)
+print("*password* or *credential* files")
+root = c['Other Interesting Files']['sections']['Searching passwords in history files']['lines']
+exclusions = [
+  r'/usr/bin/systemd-ask-password',
+  r'/usr/bin/systemd-tty-ask-password-agent',
+  r'/usr/lib/git-core/git-credential',
+  r'/usr/lib/git-core/git-credential-cache',
+  r'/usr/lib/git-core/git-credential-cache--daemon',
+  r'#)There are more creds/passwds files in the previous parent folder',
+  r'/usr/lib/grub/i386-pc/password.mod',
+  r'/usr/lib/grub/i386-pc/password_pbkdf2.mod',
+  r'/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/management/jmxremote.password',
+  r'/usr/lib/python3/dist-packages/keyring/__pycache__/credentials.cpython-310.pyc',
+  r'/usr/lib/python3/dist-packages/keyring/credentials.py', 
+  r'/usr/lib/python3/dist-packages/launchpadlib/.*',
+  # r'/usr/lib/python3/dist-packages/launchpadlib/__pycache__/credentials.cpython-310.pyc',
+  # r'/usr/lib/python3/dist-packages/launchpadlib/credentials.py',
+  # r'/usr/lib/python3/dist-packages/launchpadlib/tests/__pycache__/test_credential_store.cpython-310.pyc',
+  # r'/usr/lib/python3/dist-packages/launchpadlib/tests/test_credential_store.py',
+  r'/usr/lib/python3/dist-packages/oauthlib/.*',
+  r'/usr/lib/python3/dist-packages/twisted/.*',
+  r'/usr/lib/systemd/system/.*'
+  r'/usr/share/doc/git/contrib/credential/.*',
+  r'/usr/share/icons/.*',
+  r'/usr/share/man/.*',
+  r'/usr/share/pam/.*',
+  r'/var/cache/debconf/.*'
+  r'/var/lib/cloud/instances/iid-datasource-none/sem/.*',
+  r'/var/lib/pam/.*',
+]
+
+clean = [item['clean_text'] for item in root 
+         if 'clean_text' in item and not any(re.search(exclusion, item['clean_text']) for exclusion in exclusions)]
+for item in range(len(clean)):
+  print(clean[item])
+sep()
+
+# Checking for TTY (sudo/su) passwords in audit logs
+print("Checking for TTY (sudo/su) passwords in audit logs")
+root = c['Other Interesting Files']['sections']['Checking for TTY (sudo/su) passwords in audit logs']['lines']
+
+exclusions = []
+clean = [item['clean_text'] for item in root 
+         if 'clean_text' in item and not any(re.search(exclusion, item['clean_text']) for exclusion in exclusions)]
+for item in range(len(clean)):
+  print(clean[item])
 sep()
 
 # General log files # Analyzing Interesting logs Files (limit 70)
