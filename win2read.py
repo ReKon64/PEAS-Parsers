@@ -1,24 +1,47 @@
 #!/usr/bin/env python3
 import json
 import re
+from colorama import init, Fore, Style # Makes the output safe for redirection. Sadly this won't preserve the colours 
+import sys
+import argparse
 
+#TODO
+# Add a switch to ingest a winpeas output file and parse it via an included peas2json version
+# So see licensing stuff for that
+# Also maybe package it for internet cred lol
 
-#TODO, add argv boiler-plate for accepting infiles
-# If you want an outfile just redirect ">" smh 
-with open("/home/rekon/json2read/win2read/win.json", "r") as f:
+init(autoreset=True)
+
+parser = argparse.ArgumentParser(
+  prog = "win2read.py",
+  description = "Process winpeas > peas2json > files into readable format",)
+parser.add_argument('filepath', help = 'Path to winpeas json file to parse', action='store')
+args = parser.parse_args()
+
+with open(args.filepath, "r") as f:
   c = json.loads(f.read())
 
 def sep():
-  print("-" * 40)
+  print(f"{Style.BRIGHT}{Fore.BLUE}-" * 40)
 
+def bold(text):
+  print(f"{Style.BRIGHT}{Fore.GREEN}{text}")
+
+# # # # # # #
 # root = json tree one layer before "clear_text", REQUIRED
+# banner = should describe the section in short, ENCOURAGED
 # prepend = array of regex literals to prepend to "exclusions" entries, OPTIONAL
 # append = array of regex literals to append to "exclusions" entries  , OPTIONAL
 # exclusions = array of regex literals,  OPTIONAL
 # If match DO NOT print
 # If only root provided, will simply print all clean_text entries
-def exclude_extract(root, prepend=[], append=[], exclusions=[]):
+def exclude_extract(root, banner: str = "", prepend=[], append=[], exclusions=[]):
   
+  if banner:
+    bold(banner)
+  else:
+    pass
+
   if prepend or append:
     exclusions = [fr"{prepend}{pattern}{append}" for pattern in exclusions]
   
@@ -36,14 +59,20 @@ def exclude_extract(root, prepend=[], append=[], exclusions=[]):
       print(clean[item])
     sep()
 
-
+# # # # # # #
 # root = json tree one layer before "clear_text", REQUIRED
+# banner = should describe the section in short, ENCOURAGED
 # prepend = array of regex literals to prepend to "matches" entries, OPTIONAL
 # append = array of regex literals to append to "matches" entries  , OPTIONAL
 # matches = array of regex literals, OPTIONAL
 # If match print
 # If only root provided, will simply print all clean_text entries
-def match_extract(root, prepend=[], append=[], matches=[]):
+def match_extract(root, banner: str = "", prepend=[], append=[], matches=[]):
+
+  if banner:
+    bold(banner)
+  else:
+    pass
 
   if prepend or append:
     matches = [fr"{prepend}{pattern}{append}" for pattern in matches]
@@ -62,11 +91,12 @@ def match_extract(root, prepend=[], append=[], matches=[]):
       print(clean[item])
     sep()
 
-#Banner
+#Starting Separator for lookz
 sep()
 
-#Basic system information
+#System Information - Basic system information
 exclude_extract(
+  banner = "Basic system information",
   root = c['System Information']['sections']['Basic System Information']['lines'],
   exclusions = [
     r'ProductName',
@@ -83,15 +113,185 @@ exclude_extract(
   ],
 )
 
-#Showing All Microsoft Updates - No data Sample Empty no way to design
+#Network Information - Host File
+exclude_extract(
+  banner = "Hosts File",
+  root = c['Network Information']['sections']['Host File']['lines'],
+)
+
+#Network Information - Current TCP Listening Ports
+exclude_extract(
+  banner = "Current TCP Listening Ports",
+  root = c['Network Information']['sections']['Current TCP Listening Ports']['lines'],
+  exclusions = [
+    r'[::]',
+    r'Enumerating IPv6 connections',
+
+    # Dirty IPv6 column filter thanks to different whitespace length 
+    # compared to IPv4 
+    r'Protocol   Local Address                               Local Port    Remote Address                              Remote Port     State             Process ID      Process Name',
+  ]
+)
+
+#System Information - Checking AlwaysInstallElevated
+match_extract(
+  banner = "Checking AlwaysInstallElevated",
+  root = c['System Information']['sections']['Checking AlwaysInstallElevated']['lines'],
+  matches = []
+)
+
+#System Information - Installed .NET versions
+match_extract(
+  banner = "Installed .NET versions",
+  root = c['System Information']['sections']['Installed .NET versions']['lines'],
+  matches = [
+    r'2',
+    r'4',
+    r'5',
+  ]
+)
+
+#System Information - Showing All Microsoft Updates 
+# No data Sample Empty no way to design
 # "[X] Exception: Exception has been thrown by the target of an invocation."
 exclude_extract(
+  banner = "All Microsoft Updates",
   root = c['System Information']['sections']['Showing All Microsoft Updates']['lines'],
   exclusions = [],
 )
 
-#User Environment Variables
+#Browsers Information - Looking for Firefox DBs
 exclude_extract(
+  banner = "FFox DBs",
+  root = c['Browsers Information']['sections']['Looking for Firefox DBs']['lines'],
+)
+
+#Browsers Information - Looking for Chrome DBs
+exclude_extract(
+  banner = "Chrome DBs",
+  root = c['Browsers Information']['sections']['Looking for Chrome DBs']['lines'],
+)
+
+#Installed Applications --Via Program Files/Uninstall registry--
+exclude_extract(
+  banner = "Installed Applications Via Program Files/Uninstall registry",
+  root = c['Applications Information']['sections']['Installed Applications --Via Program Files/Uninstall registry--']['lines'],
+  exclusions = [
+    r'C:\\Program Files\\Common Files$',
+    r'C:\\Program Files\\desktop.ini$',
+    r'C:\\Program Files\\Microsoft Update Health Tools',
+    r'C:\\Program Files\\ModifiableWindowsApps',
+    r'C:\\Program Files\\Uninstall Information',
+    r'C:\\Program Files\\VMware',
+    r'C:\\Program Files\\Windows Defender',
+    r'C:\\Program Files\\Windows Defender Advanced Threat Protection',
+    r'C:\\Program Files\\Windows Mail',
+    r'C:\\Program Files\\Windows Media Player',
+    r'C:\\Program Files\\Windows Multimedia Platform',
+    r'C:\\Program Files\\Windows NT',
+    r'C:\\Program Files\\Windows Photo Viewer',
+    r'C:\\Program Files\\Windows Portable Devices',
+    r'C:\\Program Files\\Windows Security',
+    r'C:\\Program Files\\Windows Sidebar',
+    r'C:\\Program Files\\WindowsApps',
+    r'C:\\Program Files\\WindowsPowerShell',
+    r'C:\\Windows\\System32$',
+  ],
+)
+
+#Interesting files and registry - Putty Sessions
+exclude_extract(
+  banner = "Putty Sessions",
+  root = c['Interesting files and registry']['sections']['Putty Sessions']['lines']
+)
+
+#Interesting files and registry - Putty SSH Host keys
+exclude_extract(
+  banner = "Putty SSH Keys",
+  root = c['Interesting files and registry']['sections']['Putty SSH Host keys']['lines']
+)
+
+#Interesting files and registry - Unattend Files
+exclude_extract(
+  banner = "Unattended Installation Files",
+  root = c['Interesting files and registry']['sections']['Unattend Files']['lines'],
+  exclusions = [
+    r'<Password>\*SENSITIVE\*DATA\*DELETED\*</Password>',
+  ]
+)
+
+#Interesting files and registry - Looking for common SAM & SYSTEM backups
+exclude_extract(
+  banner = "Common SAM and SYSTEM backup locations",
+  root = c['Interesting files and registry']['sections']['Looking for common SAM & SYSTEM backups']['lines']
+)
+
+#Interesting files and registry - Looking for McAfee Sitelist.xml Files
+exclude_extract(
+  banner = "McAfee Sitelist.xml Files",
+  root = c['Interesting files and registry']['sections']['Looking for McAfee Sitelist.xml Files']['lines']
+)
+
+#Non MS Services - This filter might miss vulnerable Drivers
+exclude_extract(
+  banner = "Non MS Services - This filter might miss vulnerable Drivers",
+  root = c['Services Information']['sections']['Interesting Services -non Microsoft-']['lines'],
+  exclusions = [
+    r'.*VMWare.*',
+    r'.*VMware.*',
+    r'.*System32/drivers.*',
+    r'.* - System$',
+    r'.*Intel.*',
+    r'=================================================================================================',
+    r'.* - Boot$',
+    r'Alias Manager and Ticket Service',
+    r'Driver to provide enhanced memory management of this virtual machine.',
+    r'Provides support for synchronizing objects between the host and guest operating systems.',
+    r'vSockets Driver',
+    r'Generic driver for USB devices',
+  ]
+)
+
+#Services Information - Modifiable Services
+exclude_extract(
+  banner = "Modifiable Services",
+  root = c['Services Information']['sections']['Modifiable Services']['lines'],
+  exclusions = []
+)
+
+#Services Information - Looking if you can modify any service registry
+exclude_extract(
+  banner = "Any modifiable any service registry",
+  root = c['Services Information']['sections']['Looking if you can modify any service registry']['lines'],
+  exclusions = []
+)
+
+#Services Information - Checking write permissions in PATH folders (DLL Hijacking)
+match_extract(
+  banner = "Common False Positives for DLL Hijacking via write perms",
+  root = c['Services Information']['sections']['Checking write permissions in PATH folders (DLL Hijacking)']['lines'],
+  matches = [
+    r'(DLL Hijacking)',
+  ]
+)
+
+#System Information - Checking KrbRelayUp
+match_extract(
+  banner = "Checking KrbRelayUp",
+  root = c['System Information']['sections']['Checking KrbRelayUp']['lines'],
+  matches = [],
+)
+
+#Windows Credentials - Looking for Kerberos tickets
+exclude_extract(
+  banner = "Any Stored Kerberos Tickets",
+  root = c['Windows Credentials']['sections']['Looking for Kerberos tickets']['lines'],
+  exclusions = [],
+)
+
+#System Information - User Environment Variables
+exclude_extract(
+  banner = "User Environment Variables",
   root = c['System Information']['sections']['User Environment Variables']['lines'],
   exclusions = [
     r'COMPUTERNAME',
@@ -122,4 +322,61 @@ exclude_extract(
   ],
 )
 
-#System Environment Variables
+#System Information - System Environment Variables
+exclude_extract(
+  banner = "System Environment Variables",
+  root = c['System Information']['sections']['System Environment Variables']['lines'],
+  exclusions = [
+    r'ComSpec:',
+    r'DriverData:',
+    r'NUMBER_OF_PROCESSORS:',
+    r'OS:',
+    r'PROCESSOR_ARCHITECTURE:',
+    r'PROCESSOR_IDENTIFIER:',
+    r'PROCESSOR_LEVEL:',
+    r'PROCESSOR_REVISION:',
+    r'PSModulePath:',
+    r'TEMP:',
+    r'TMP:',
+    r'USERNAME:',
+    r'windir:',
+  ],
+)
+
+#System Information - PowerShell Settings
+match_extract(
+  banner = "PowerShell Settings",
+  root = c['System Information']['sections']['PowerShell Settings']['lines'],
+  matches = [
+    r'PowerShell v2 Version:',
+    r'PowerShell v5 Version:',
+    r'PS history file:',
+  ],
+)
+
+#System Information - Audit Settings
+exclude_extract(
+  banner = "Audit Settings",
+  root = c['System Information']['sections']['Audit Settings']['lines'],
+  exclusions = [],
+)
+
+#System Information - AV Information
+match_extract(
+  banner = "AV Information",
+  root = c['System Information']['sections']['AV Information']['lines'],
+  matches = [
+    r'Name:',
+    r'ProductEXE:',
+  ],
+)
+
+#System Information - UAC Status
+exclude_extract(
+  banner = "UAC Settings",
+  root = c['System Information']['sections']['UAC Status']['lines'],
+  exclusions = [
+    r'LocalAccountTokenFilterPolicy:',
+    r'EnableLUA', # This one might be useful in more advanced scenarios but ehhh
+  ]
+)
