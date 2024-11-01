@@ -51,7 +51,8 @@ def exclude_extract(root, banner: str = "", prepend=[], append=[], exclusions=[]
     for item in range(len(clean)):
       print(clean[item])
     sep()
-  
+    #print(exclusions)
+
   else:
     clean = [item['clean_text'] for item in root]
 
@@ -111,6 +112,24 @@ exclude_extract(
     r'Current Time',
     r'HighIntegrity',
   ],
+)
+
+#Users Information - Users (Current User & Groups)
+match_extract(
+  banner = "Current User & Groups",
+  root = c['Users Information']['sections']['Users']['lines'],
+  matches = [
+    r'Current user:',
+    r'Current groups:',
+  ],
+)
+
+#Users Information - Current Token privileges
+exclude_extract(
+  banner = "Current Privileges",
+  root = c['Users Information']['sections']['Current Token privileges']['lines'],
+  exclusions = [
+  ]
 )
 
 #Network Information - Host File
@@ -380,3 +399,7 @@ exclude_extract(
     r'EnableLUA', # This one might be useful in more advanced scenarios but ehhh
   ]
 )
+
+#Additional Hints
+bold('Check C:\ for weird Folders')
+bold('Run systeminfo and wes-ng.py')
