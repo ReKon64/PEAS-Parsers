@@ -1,5 +1,13 @@
 # PEAS-Parsers
 
+### "Installation"
+
+1. Git clone relevant parts
+
+`wget https://github.com/ReKon64/PEAS-Parsers/blob/main/linj2read.py && https://github.com/ReKon64/PEAS-Parsers/blob/main/win2read.py && wget https://github.com/ReKon64/PEAS-Parsers/blob/main/peas2json/peas2json.py`
+
+3. Git Clone whole repo
+
 ## Usage
 ### 0. Acquire some PEAS output
 Doesn't matter if it's colored or not and if any results have been omitted.
