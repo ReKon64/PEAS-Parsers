@@ -159,6 +159,13 @@ match_extract(
   matches = []
 )
 
+#Users Information - Looking for AutoLogon credentials
+exclude_extract(
+  banner = "AutoLogon Creds in Registry",
+  root = c['Users Information']['sections']['Looking for AutoLogon credentials']['lines'],
+  exclusions = []
+)
+
 #System Information - Installed .NET versions
 match_extract(
   banner = "Installed .NET versions",
