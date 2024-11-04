@@ -1,4 +1,4 @@
-# PEAS-Parsers
+# PEASS-Parsers
 
 # "Installation"
 
