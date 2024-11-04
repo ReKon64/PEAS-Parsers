@@ -1,4 +1,6 @@
-# PEASS-Parsers
+# Personal PEASS-Parsers
+
+Because I don't care about DBUS data and bajilion lines of false positives
 
 # "Installation"
 
