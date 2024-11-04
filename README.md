@@ -1,12 +1,13 @@
 # PEAS-Parsers
 
-### "Installation"
+# "Installation"
 
-1. Git clone relevant parts
+## 1. Wget relevant parts
 
 `wget https://github.com/ReKon64/PEAS-Parsers/blob/main/linj2read.py && https://github.com/ReKon64/PEAS-Parsers/blob/main/win2read.py && wget https://github.com/ReKon64/PEAS-Parsers/blob/main/peas2json/peas2json.py`
 
-3. Git Clone whole repo
+## 2. Git Clone whole repo
+`https://github.com/ReKon64/PEAS-Parsers`
 
 ## Usage
 ### 0. Acquire some PEAS output
