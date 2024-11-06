@@ -5,7 +5,13 @@ from colorama import init, Fore, Style # Makes the output safe for redirection. 
 import sys
 import argparse
 
-#TODO
+
+#TODO 
+
+# # # High-Prio
+# Add in function ability to colour matches
+
+# # # Low-Prio
 # Add a switch to ingest a winpeas output file and parse it via an included peas2json version
 # So see licensing stuff for that
 # Also maybe package it for internet cred lol
@@ -282,14 +288,28 @@ exclude_extract(
 exclude_extract(
   banner = "Modifiable Services",
   root = c['Services Information']['sections']['Modifiable Services']['lines'],
-  exclusions = []
+  exclusions = [],
 )
 
 #Services Information - Looking if you can modify any service registry
 exclude_extract(
   banner = "Any modifiable any service registry",
   root = c['Services Information']['sections']['Looking if you can modify any service registry']['lines'],
-  exclusions = []
+  exclusions = [],
+)
+
+#System Information - LAPS Settings
+exclude_extract(
+  banner = "LAPS Enabled ? Check if your group can read",
+  root = c['System Information']['sections']['LAPS Settings']['lines'],
+  exclusions = [],
+)
+
+#System Information - Checking KrbRelayUp
+match_extract(
+  banner = "Checking KrbRelayUp",
+  root = c['System Information']['sections']['Checking KrbRelayUp']['lines'],
+  matches = [],
 )
 
 #Services Information - Checking write permissions in PATH folders (DLL Hijacking)
@@ -298,14 +318,7 @@ match_extract(
   root = c['Services Information']['sections']['Checking write permissions in PATH folders (DLL Hijacking)']['lines'],
   matches = [
     r'(DLL Hijacking)',
-  ]
-)
-
-#System Information - Checking KrbRelayUp
-match_extract(
-  banner = "Checking KrbRelayUp",
-  root = c['System Information']['sections']['Checking KrbRelayUp']['lines'],
-  matches = [],
+  ],
 )
 
 #Windows Credentials - Looking for Kerberos tickets
@@ -371,12 +384,12 @@ exclude_extract(
 
 #System Information - PowerShell Settings
 match_extract(
-  banner = "PowerShell Settings",
+  banner = "PowerShell Settings | Check the History file",
   root = c['System Information']['sections']['PowerShell Settings']['lines'],
   matches = [
     r'PowerShell v2 Version:',
     r'PowerShell v5 Version:',
-    r'PS history file:',
+    r'PS History Path:',
   ],
 )
 
@@ -408,5 +421,5 @@ exclude_extract(
 )
 
 #Additional Hints
-bold('Check C:\ for weird Folders')
+bold('Check C: for weird Folders')
 bold('Run systeminfo and wes-ng.py')
