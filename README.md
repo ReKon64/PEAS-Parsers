@@ -21,9 +21,9 @@ Use the included peas2json copy that adds an all-important slash to one of the A
 
 Alternatively get `https://github.com/peass-ng/PEASS-ng/blob/master/parsers/peas2json.py` and fix it yourself.
 
-I do not know if the powershell version works and I have no intention of supporting it.
-
 `python3 peas2json.py peass.log peass.json`
+
+I do not know if the powershell version works and I have no intention of supporting it.
 
 ### 2. JSON2READABLE
 For Windows
