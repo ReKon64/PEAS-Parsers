@@ -38,7 +38,8 @@ Since we're using `colorama` module for output, you can safely pipe `|` or redir
 There will be no colours tho.
 
 ### 4. Regex
-This project uses a pretty strict regex in mostly exclusion based logic, which means any deviation will be output.
+This project uses a pretty strict regex in mostly exclusion based logic, which means any deviation will printed.
+Same for match functions.
 
 If you see something regularly, just add it yourself or post an issue.
 
